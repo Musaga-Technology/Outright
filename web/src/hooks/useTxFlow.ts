@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { erc20Abi, maxUint256, type Address, type Hash } from 'viem'
 import { useAccount, usePublicClient, useWriteContract } from 'wagmi'
 import { OUTRIGHT_ADDRESS } from '../config'
 
 export type FlowState =
   | { kind: 'idle' }
-  | { kind: 'working'; step: string }
+  | { kind: 'working'; step: string; n?: number; total?: number }
   | { kind: 'done'; hash: Hash; message: string }
   | { kind: 'error'; message: string }
 
@@ -15,6 +15,8 @@ export type FlowState =
  */
 export function useTxFlow() {
   const [state, setState] = useState<FlowState>({ kind: 'idle' })
+  // Set once an approve step runs, so the UI can show "step 2 of 2" for the write that follows.
+  const approved = useRef(false)
   const { address } = useAccount()
   const client = usePublicClient()
   const { writeContractAsync } = useWriteContract()
@@ -28,14 +30,15 @@ export function useTxFlow() {
       args: [address, OUTRIGHT_ADDRESS],
     })
     if (current >= amount) return
-    setState({ kind: 'working', step: `Approve ${symbol} in your wallet` })
+    approved.current = true
+    setState({ kind: 'working', step: `Approve ${symbol} in your wallet`, n: 1, total: 2 })
     const hash = await writeContractAsync({
       address: token,
       abi: erc20Abi,
       functionName: 'approve',
       args: [OUTRIGHT_ADDRESS, maxUint256],
     })
-    setState({ kind: 'working', step: `Waiting for ${symbol} approval` })
+    setState({ kind: 'working', step: `Waiting for ${symbol} approval`, n: 1, total: 2 })
     await client.waitForTransactionReceipt({ hash })
   }
 
@@ -46,11 +49,13 @@ export function useTxFlow() {
     }) => Promise<Hash>,
     doneMessage: string,
   ) {
+    approved.current = false
     try {
       const send = async (label: string, write: () => Promise<Hash>) => {
-        setState({ kind: 'working', step: `${label} in your wallet` })
+        const n = approved.current ? { n: 2, total: 2 } : {}
+        setState({ kind: 'working', step: `${label} in your wallet`, ...n })
         const hash = await write()
-        setState({ kind: 'working', step: 'Waiting for confirmation' })
+        setState({ kind: 'working', step: 'Waiting for confirmation', ...n })
         const receipt = await client!.waitForTransactionReceipt({ hash })
         if (receipt.status !== 'success') throw new Error('Transaction reverted on-chain.')
         return hash

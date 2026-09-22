@@ -8,6 +8,7 @@ import { buyerOf, phaseLabel, phaseOf, roleOf, same, sellerOf, Side, ZERO, type 
 import { fmtAmount, fmtCountdown, fmtDate, rateOf, short } from '../lib/format'
 import { FlowStatus } from './FlowStatus'
 import { RateFigure } from './RateFigure'
+import { WalletButton } from './WalletButton'
 
 export function DealDetail({ deal, onChanged, onClose }: { deal: Deal; onChanged: () => void; onClose: () => void }) {
   const { address, isConnected } = useAccount()
@@ -63,12 +64,12 @@ export function DealDetail({ deal, onChanged, onClose }: { deal: Deal; onChanged
         : `${fmtAmount(deal.usdcAmount)} USDC`
 
   return (
-    <aside className="detail" aria-labelledby="detail-title">
+    <section className="detail">
       <div className="detail__top">
         <h2 id="detail-title">Deal #{deal.id.toString()}</h2>
         <span className={`phase phase--${phase}`}>{phaseLabel[phase]}</span>
-        <button className="linklike detail__close" onClick={onClose} aria-label="Close deal">
-          Close
+        <button className="detail__close" onClick={onClose} aria-label="Close deal">
+          ×
         </button>
       </div>
 
@@ -123,12 +124,14 @@ export function DealDetail({ deal, onChanged, onClose }: { deal: Deal; onChanged
       </div>
 
       <div className="actions">
-        {wrongChain && <p className="hint">Switch your wallet to Arc to act on this forward.</p>}
+        {wrongChain && phase !== 'open' && <WalletButton label="" onClick={() => {}} />}
 
-        {phase === 'open' && canAccept && (
-          <button className="btn btn--ink btn--wide" disabled={busy || wrongChain} onClick={() => call('accept', 'Confirm acceptance', 'Forward accepted.')}>
-            Accept and lock {takerLeg}
-          </button>
+        {phase === 'open' && (!isConnected || wrongChain || canAccept) && !isMaker && (
+          <WalletButton
+            label={`Accept and lock ${takerLeg}`}
+            disabled={busy || !canAccept}
+            onClick={() => call('accept', 'Confirm acceptance', 'Forward accepted.')}
+          />
         )}
         {phase === 'open' && restricted && !isTaker && !isMaker && (
           <p className="hint">This offer is reserved for {short(deal.taker)}.</p>
@@ -171,10 +174,10 @@ export function DealDetail({ deal, onChanged, onClose }: { deal: Deal; onChanged
         {(phase === 'matured' || phase === 'unwound') && role && myClaimed && (
           <p className="hint">You've claimed your side.</p>
         )}
-        {!isConnected && <p className="hint">Connect a wallet to act on this forward.</p>}
+        {!isConnected && phase !== 'open' && <p className="hint">Connect a wallet to act on this forward.</p>}
       </div>
 
       <FlowStatus state={flow.state} onDismiss={flow.reset} />
-    </aside>
+    </section>
   )
 }

@@ -9,6 +9,7 @@ import { Side, ZERO } from '../lib/deal'
 import { fmtAmount, fmtDate, rateOf, toUnits, usdcFor } from '../lib/format'
 import { FlowStatus } from './FlowStatus'
 import { RateFigure } from './RateFigure'
+import { WalletButton } from './WalletButton'
 
 const TENORS = [
   { label: '5 min', secs: 5 * 60, hint: 'for demos' },
@@ -45,20 +46,19 @@ export function Ticket({ onPosted }: { onPosted: () => void }) {
   const maturity = now + tenor
   const acceptBy = Math.min(now + acceptWindow, maturity)
 
+  // Wallet and chain are handled by the button itself; these are the form's own gaps.
   const problem = useMemo(() => {
     if (!OUTRIGHT_ADDRESS) return 'Set NEXT_PUBLIC_OUTRIGHT_ADDRESS to the deployed contract.'
-    if (!isConnected) return 'Connect a wallet to post an offer.'
-    if (chainId !== arc.id) return 'Switch your wallet to Arc.'
     if (!eurUnits) return 'Enter the EURC amount.'
     if (!usdUnits) return 'Enter the rate in USDC per EURC.'
     if (!cptyValid) return 'Counterparty must be a valid address, or left blank.'
     return null
-  }, [isConnected, chainId, eurUnits, usdUnits, cptyValid])
+  }, [eurUnits, usdUnits, cptyValid])
 
   const buying = side === Side.BuyEURC
 
   async function post() {
-    if (problem || !usdc || !eurc || !eurUnits || !usdUnits) return
+    if (problem || !isConnected || chainId !== arc.id || !usdc || !eurc || !eurUnits || !usdUnits) return
     const nowAtSend = Math.floor(Date.now() / 1000)
     const m = BigInt(nowAtSend + tenor)
     const a = BigInt(Math.min(nowAtSend + acceptWindow, nowAtSend + tenor))
@@ -81,8 +81,11 @@ export function Ticket({ onPosted }: { onPosted: () => void }) {
   }
 
   return (
-    <section className="ticket" aria-labelledby="ticket-title">
-      <h2 id="ticket-title">New forward</h2>
+    <section className="ticket card" aria-labelledby="ticket-title">
+      <div className="ticket__head">
+        <h2 id="ticket-title">New forward</h2>
+        <span className="ticket__pair">EUR/USD</span>
+      </div>
 
       <div className="segmented" role="radiogroup" aria-label="Direction">
         <button role="radio" aria-checked={buying} className={buying ? 'on' : ''} onClick={() => setSide(Side.BuyEURC)}>
@@ -162,10 +165,8 @@ export function Ticket({ onPosted }: { onPosted: () => void }) {
         </p>
       </div>
 
-      <button className="btn btn--ink btn--wide" disabled={!!problem || flow.state.kind === 'working'} onClick={post}>
-        Post offer
-      </button>
-      {problem && flow.state.kind === 'idle' && <p className="hint">{problem}</p>}
+      <WalletButton label="Post offer" disabled={!!problem || flow.state.kind === 'working'} onClick={post} />
+      {problem && isConnected && chainId === arc.id && flow.state.kind === 'idle' && <p className="hint">{problem}</p>}
       <FlowStatus state={flow.state} onDismiss={flow.reset} />
     </section>
   )

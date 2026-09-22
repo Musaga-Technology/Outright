@@ -16,13 +16,13 @@ worth taking further. Favor correctness and a clean live demo over breadth.
   - `script/Deploy.s.sol` — mainnet deploy (asserts both tokens report 6 decimals).
   - `script/LocalDemo.s.sol` — anvil-only: mock tokens + seeded forwards in several states.
   - `lib/` is vendored (forge-std, OpenZeppelin v5.1.0 `contracts/` only). No `forge install` needed.
-- `web/` — Next.js (App Router) + React 19 + TypeScript + wagmi v2 + viem. The desk is a client-only page (`src/app/page.tsx` loads `src/App.tsx` with `ssr: false`). No UI framework; plain CSS in `src/styles.css`.
+- `web/` — Next.js (App Router) + React 19 + TypeScript + wagmi v2 + viem. `/` is the landing page (server-rendered, `src/app/page.tsx` + `landing.css`); `/desk` is the app, client-only (`src/app/desk/desk-client.tsx` loads `src/App.tsx` with `ssr: false`). Illustrations are inline SVGs in `src/components/Illustrations.tsx`, coloured by CSS tokens. No UI framework; plain CSS in `src/styles.css`.
   - `src/config.ts` — chain definition (env-overridable), contract address, wagmi config.
   - `src/abi/outright.ts` — GENERATED. After any contract change: `cd contracts && forge build && cd ../web && npm run abi`.
   - `src/hooks/useOutright.ts` — reads (tokens, balances, all deals via multicall, polling 4s).
   - `src/hooks/useTxFlow.ts` — approve-if-needed + write + wait-for-receipt, with readable revert messages.
   - `src/lib/deal.ts` — `Deal` type and `phaseOf()`: UI phase derived from on-chain status + clock.
-  - `src/components/` — Header, Ticket (create), Blotter (table), DealDetail (actions), RateFigure.
+  - `src/components/` — Header, Ticket (create), Blotter (table), DealDetail (actions, shown in a slide-over drawer), RateFigure, WalletButton (primary button that walks connect → switch chain → action).
 - `scripts/local.sh` — starts anvil, installs Multicall3 at the canonical address, deploys the demo,
   writes `web/.env.local`.
 

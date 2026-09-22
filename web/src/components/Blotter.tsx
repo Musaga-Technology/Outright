@@ -1,26 +1,29 @@
-import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { phaseLabel, phaseOf, roleOf, same, Side, type Deal } from '../lib/deal'
 import { fmtAmount, fmtCountdown, fmtDate, rateOf } from '../lib/format'
 import { useNow } from '../hooks/useNow'
+import { EmptyTicket } from './Illustrations'
 import { RateFigure } from './RateFigure'
 
-type Tab = 'offers' | 'mine' | 'all'
+export type Tab = 'offers' | 'mine' | 'all'
 
 export function Blotter({
   deals,
   loading,
   selected,
   onSelect,
+  tab,
+  onTab,
 }: {
   deals: Deal[]
   loading: boolean
   selected: bigint | null
   onSelect: (id: bigint) => void
+  tab: Tab
+  onTab: (t: Tab) => void
 }) {
   const { address } = useAccount()
   const now = useNow()
-  const [tab, setTab] = useState<Tab>('offers')
 
   const rows = deals.filter((d) => {
     if (tab === 'offers') return phaseOf(d, now) === 'open'
@@ -35,9 +38,9 @@ export function Blotter({
   }
 
   return (
-    <section className="blotter" aria-labelledby="blotter-title">
+    <section className="blotter card" aria-labelledby="blotter-title">
       <div className="blotter__head">
-        <h2 id="blotter-title">Blotter</h2>
+        <h2 id="blotter-title">Forwards</h2>
         <div className="tabs" role="tablist">
           {(
             [
@@ -46,20 +49,28 @@ export function Blotter({
               ['all', 'All'],
             ] as const
           ).map(([k, label]) => (
-            <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
+            <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => onTab(k)}>
               {label} <span className="count">{counts[k]}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {loading && <p className="empty">Loading forwards from Arc…</p>}
+      {loading && (
+        <div className="empty">
+          <span className="spinner" aria-hidden />
+          <p>Loading forwards from Arc…</p>
+        </div>
+      )}
       {!loading && rows.length === 0 && (
-        <p className="empty">
-          {tab === 'offers' && 'No open offers right now. Post one from the ticket.'}
-          {tab === 'mine' && (address ? "You haven't made or taken any forwards yet." : 'Connect a wallet to see your forwards.')}
-          {tab === 'all' && 'No forwards have been created on this contract yet.'}
-        </p>
+        <div className="empty">
+          <EmptyTicket />
+          <p>
+            {tab === 'offers' && 'No open offers right now. Post one from the ticket.'}
+            {tab === 'mine' && (address ? "You haven't made or taken any forwards yet." : 'Connect a wallet to see your forwards.')}
+            {tab === 'all' && 'No forwards have been created on this contract yet.'}
+          </p>
+        </div>
       )}
 
       {rows.length > 0 && (

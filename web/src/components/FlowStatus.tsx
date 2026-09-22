@@ -8,25 +8,35 @@ export function FlowStatus({ state, onDismiss }: { state: FlowState; onDismiss: 
       {state.kind === 'working' && (
         <>
           <span className="spinner" aria-hidden />
-          <span>{state.step}…</span>
+          <span className="flow__text">
+            {state.n && state.total && (
+              <span className="flow__step">
+                Step {state.n} of {state.total}
+              </span>
+            )}
+            {state.step}…
+          </span>
         </>
       )}
       {state.kind === 'done' && (
         <>
-          <span>{state.message}</span>
+          <span className="flow__icon" aria-hidden>
+            ✓
+          </span>
+          <span className="flow__text">{state.message}</span>
           <a href={explorerTx(state.hash)} target="_blank" rel="noreferrer">
             View transaction
           </a>
-          <button className="linklike" onClick={onDismiss}>
-            Dismiss
+          <button className="flow__close" onClick={onDismiss} aria-label="Dismiss">
+            ×
           </button>
         </>
       )}
       {state.kind === 'error' && (
         <>
-          <span>{state.message}</span>
-          <button className="linklike" onClick={onDismiss}>
-            Dismiss
+          <span className="flow__text">{state.message}</span>
+          <button className="flow__close" onClick={onDismiss} aria-label="Dismiss">
+            ×
           </button>
         </>
       )}
