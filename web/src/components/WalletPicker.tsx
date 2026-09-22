@@ -25,9 +25,20 @@ export function WalletPickerProvider({ children }: { children: React.ReactNode }
 function useWallets(): Connector[] {
   const { connectors } = useConnect()
   const announced = connectors.filter((c) => c.type === 'injected' && c.id !== 'injected')
-  if (announced.length > 0) return announced
   const hasLegacy = typeof window !== 'undefined' && !!(window as { ethereum?: unknown }).ethereum
-  return hasLegacy ? connectors.filter((c) => c.id === 'injected') : []
+  const browser = announced.length > 0 ? announced : hasLegacy ? connectors.filter((c) => c.id === 'injected') : []
+  // Present only when NEXT_PUBLIC_WC_PROJECT_ID is set (see config.ts).
+  const phone = connectors.filter((c) => c.type === 'walletConnect')
+  return [...browser, ...phone]
+}
+
+function PhoneIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+      <rect x="7" y="3" width="10" height="18" rx="2.5" />
+      <path d="M11 18h2" />
+    </svg>
+  )
 }
 
 function WalletPicker({ onClose }: { onClose: () => void }) {
@@ -36,6 +47,7 @@ function WalletPicker({ onClose }: { onClose: () => void }) {
   const { connect, isPending, variables, error, reset } = useConnect({
     mutation: { onSuccess: onClose },
   })
+  const hasBrowserWallet = wallets.some((c) => c.type === 'injected')
   const pendingId = isPending ? (variables?.connector as Connector | undefined)?.uid : undefined
 
   return (
@@ -47,7 +59,7 @@ function WalletPicker({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
-      {wallets.length > 0 ? (
+      {wallets.length > 0 && (
         <ul className="picker__list">
           {wallets.map((c) => (
             <li key={c.uid}>
@@ -57,17 +69,29 @@ function WalletPicker({ onClose }: { onClose: () => void }) {
                 disabled={isPending || isConnected}
                 onClick={() => {
                   reset()
+                  // WalletConnect opens its own QR dialog; step aside so the two don't stack.
+                  if (c.type === 'walletConnect') onClose()
                   connect({ connector: c })
                 }}
               >
-                {c.icon ? <img src={c.icon} alt="" width={32} height={32} /> : <span className="picker__blank" aria-hidden />}
-                <span className="picker__name">{c.id === 'injected' ? 'Browser wallet' : c.name}</span>
+                {c.icon ? (
+                  <img src={c.icon} alt="" width={30} height={30} />
+                ) : (
+                  <span className="picker__blank" aria-hidden>
+                    {c.type === 'walletConnect' && <PhoneIcon />}
+                  </span>
+                )}
+                <span className="picker__name">
+                  {c.type === 'walletConnect' ? 'Phone wallet' : c.id === 'injected' ? 'Browser wallet' : c.name}
+                  {c.type === 'walletConnect' && <small>Scan a QR code with WalletConnect</small>}
+                </span>
                 <span className="picker__state">{pendingId === c.uid ? 'Check your wallet…' : ''}</span>
               </button>
             </li>
           ))}
         </ul>
-      ) : (
+      )}
+      {!hasBrowserWallet && (
         <div className="picker__none">
           <p>No wallet found in this browser. Install one, then reload this page.</p>
           <div className="picker__links">

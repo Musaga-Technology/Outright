@@ -1,6 +1,6 @@
 import { defineChain, type Address } from 'viem'
 import { createConfig, http } from 'wagmi'
-import { injected } from 'wagmi/connectors'
+import { injected, walletConnect } from 'wagmi/connectors'
 
 const chainId = Number(process.env.NEXT_PUBLIC_ARC_CHAIN_ID ?? 5042)
 // Multicall3 is predeployed on Arc mainnet and testnet. A plain local Anvil node doesn't
@@ -24,9 +24,27 @@ export const OUTRIGHT_ADDRESS = (process.env.NEXT_PUBLIC_OUTRIGHT_ADDRESS || und
 
 export const TOKEN_DECIMALS = 6 // USDC ERC-20 interface and EURC are both 6 decimals
 
+// Phone wallets via QR code. Off unless a Reown (WalletConnect) project ID is set: cloud.reown.com
+const WC_PROJECT_ID = process.env.NEXT_PUBLIC_WC_PROJECT_ID
+
 export const wagmiConfig = createConfig({
   chains: [arc],
-  connectors: [injected()],
+  connectors: [
+    injected(),
+    ...(WC_PROJECT_ID
+      ? [
+          walletConnect({
+            projectId: WC_PROJECT_ID,
+            metadata: {
+              name: 'Outright',
+              description: 'USDC/EURC forwards on Arc',
+              url: typeof window !== 'undefined' ? window.location.origin : 'https://outright.app',
+              icons: [],
+            },
+          }),
+        ]
+      : []),
+  ],
   transports: { [arc.id]: http() },
 })
 
