@@ -1,260 +1,201 @@
-/* Inline SVG illustrations. Colours come from CSS tokens (see .il-* in landing.css / styles.css),
-   so every drawing follows light and dark mode. All are decorative: aria-hidden. */
+/* Inline SVG drawings. Colours come from CSS tokens (.il-* rules in styles.css), so every
+   drawing follows light and dark mode. All are decorative (aria-hidden) unless they carry a caption. */
 
 export function Mark() {
   return (
     <svg className="mark" viewBox="0 0 32 32" aria-hidden>
-      <rect width="32" height="32" rx="8" />
-      <path className="mark__fwd" d="M8 19.5h15m-4-4 4 4-4 4" />
-      <path className="mark__back" d="M24 12.5H9m4-4-4 4 4 4" />
+      <rect width="32" height="32" rx="7" />
+      <path className="mark__fwd" d="M8 19.5h15m-3.5-3.5 3.5 3.5-3.5 3.5" />
+      <path className="mark__back" d="M24 12.5H9m3.5-3.5L9 12.5l3.5 3.5" />
     </svg>
   )
 }
 
-function Coin({ cx, cy, r, kind }: { cx: number; cy: number; r: number; kind: 'usd' | 'eur' }) {
+/**
+ * Guilloché rosette — the fine interlaced engraving printed on banknotes and share certificates.
+ * Each ring is a circle whose radius waves `lobes` times around; offsetting the phase ring by ring
+ * weaves the lattice. Computed at render, so there is no image to ship.
+ */
+function rings(r: number, amp: number, lobes: number, count: number, step: number, twist: number, samples = 180) {
+  const out: string[] = []
+  for (let i = 0; i < count; i++) {
+    const base = r - i * step
+    let d = ''
+    for (let k = 0; k <= samples; k++) {
+      const t = (k / samples) * Math.PI * 2
+      const rad = base + amp * Math.sin(lobes * t + i * twist)
+      d += `${k ? 'L' : 'M'}${(rad * Math.cos(t)).toFixed(1)} ${(rad * Math.sin(t)).toFixed(1)}`
+    }
+    out.push(d + 'Z')
+  }
+  return out
+}
+
+export function Guilloche({ className = '', size = 520 }: { className?: string; size?: number }) {
+  const r = size / 2 - 8
+  const outer = rings(r, 9, 18, 10, 3.2, 0.32)
+  const inner = rings(r * 0.62, 12, 11, 12, 3.6, -0.42)
+  const core = rings(r * 0.26, 7, 7, 8, 3, 0.5, 120)
   return (
-    <g className={`il-coin il-coin--${kind}`}>
-      <circle cx={cx} cy={cy + r * 0.12} r={r} className="il-coin__edge" />
-      <circle cx={cx} cy={cy} r={r} className="il-coin__face" />
-      <circle cx={cx} cy={cy} r={r * 0.78} className="il-coin__ring" />
-      <text x={cx} y={cy} dy="0.36em" textAnchor="middle" fontSize={r * 0.95} className="il-coin__glyph">
-        {kind === 'usd' ? '$' : '€'}
-      </text>
-    </g>
+    <svg viewBox={`${-size / 2} ${-size / 2} ${size} ${size}`} className={`il il-guilloche ${className}`} aria-hidden>
+      <g className="il-g il-g--eur">
+        {outer.map((d, i) => (
+          <path key={i} d={d} />
+        ))}
+      </g>
+      <g className="il-g il-g--usd">
+        {inner.map((d, i) => (
+          <path key={i} d={d} />
+        ))}
+      </g>
+      <g className="il-g il-g--eur">
+        {core.map((d, i) => (
+          <path key={i} d={d} />
+        ))}
+      </g>
+    </svg>
   )
 }
 
-function Lock({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+/** Ink stamp for the specimen confirmation. */
+export function SettledStamp() {
   return (
-    <g transform={`translate(${x} ${y}) scale(${s})`} className="il-lock">
-      <path d="M-7 -4v-5a7 7 0 0 1 14 0v5" className="il-lock__shackle" />
-      <rect x="-11" y="-4" width="22" height="17" rx="4" className="il-lock__body" />
-      <circle cx="0" cy="3.5" r="2.4" className="il-lock__hole" />
-    </g>
-  )
-}
-
-/** Hero: a live forward ticket, the two coins it swaps, and the lock that holds them. */
-export function HeroIllustration() {
-  return (
-    <svg viewBox="0 0 560 480" className="il il-hero" aria-hidden>
+    <svg viewBox="0 0 140 140" className="il il-stamp" aria-hidden>
       <defs>
-        <pattern id="il-dots" width="18" height="18" patternUnits="userSpaceOnUse">
-          <circle cx="2" cy="2" r="1.2" className="il-dot" />
-        </pattern>
-        <linearGradient id="il-progress" x1="0" x2="1">
-          <stop offset="0" className="il-stop-a" />
-          <stop offset="1" className="il-stop-b" />
-        </linearGradient>
-        <filter id="il-shadow" x="-20%" y="-20%" width="140%" height="160%">
-          <feDropShadow dx="0" dy="18" stdDeviation="18" className="il-shadow" />
-        </filter>
+        <path id="stamp-arc" d="M70 70m-49 0a49 49 0 1 1 98 0a49 49 0 1 1-98 0" />
       </defs>
-
-      <circle cx="290" cy="240" r="210" className="il-blob" />
-      <rect x="40" y="30" width="500" height="420" rx="40" fill="url(#il-dots)" opacity="0.7" />
-
-      <path d="M96 392C40 250 150 70 300 64" className="il-path il-path--usd" />
-      <path d="M482 96c60 140-40 330-196 336" className="il-path il-path--eur" />
-
-      {/* the ticket */}
-      <g filter="url(#il-shadow)">
-        <rect x="100" y="112" width="370" height="252" rx="22" className="il-card" />
-      </g>
-      <text x="128" y="152" className="il-label">EUR/USD forward · 30 days</text>
-      <rect x="370" y="134" width="74" height="26" rx="13" className="il-pill" />
-      <circle cx="384" cy="147" r="3.5" className="il-pill__dot" />
-      <text x="394" y="151.5" className="il-pill__text">Running</text>
-
-      <text x="126" y="228" className="il-rate">
-        <tspan className="il-rate__big">1.17</tspan>
-        <tspan className="il-rate__pips" dx="2">00</tspan>
+      <circle cx="70" cy="70" r="64" className="il-stamp__ring" />
+      <circle cx="70" cy="70" r="59" className="il-stamp__ring il-stamp__ring--thin" />
+      <circle cx="70" cy="70" r="37" className="il-stamp__ring il-stamp__ring--thin" />
+      <text className="il-stamp__arc">
+        <textPath href="#stamp-arc" startOffset="0" textLength="302" lengthAdjust="spacing">
+          SETTLED IN FULL · PHYSICALLY DELIVERED ·
+        </textPath>
       </text>
-      <text x="128" y="252" className="il-label">USDC per EURC, locked today</text>
-
-      <rect x="128" y="290" width="314" height="8" rx="4" className="il-track" />
-      <rect x="128" y="290" width="196" height="8" rx="4" fill="url(#il-progress)" />
-      <circle cx="324" cy="294" r="7" className="il-knob" />
-      <text x="128" y="330" className="il-small">Today</text>
-      <text x="442" y="330" textAnchor="end" className="il-small">Settles in 11d 4h</text>
-
-      <Coin cx={96} cy={384} r={46} kind="usd" />
-      <Coin cx={478} cy={96} r={42} kind="eur" />
-
-      <g filter="url(#il-shadow)">
-        <circle cx="468" cy="372" r="34" className="il-card" />
-      </g>
-      <Lock x={468} y={372} s={1.25} />
-
-      <g className="il-spark">
-        <path d="M60 170v14M53 177h14" />
-        <path d="M512 250v10M507 255h10" />
-        <path d="M240 440v10M235 445h10" />
-      </g>
+      <path d="M55 70.5l10 10 20-21" className="il-stamp__check" />
     </svg>
   )
 }
 
-/** A rate chart: the market wanders, the locked rate doesn't. */
+/** The market wanders; the locked rate doesn't. Annotated like a printed chart, with leader lines. */
 export function HedgeChart() {
   const spot =
-    'M40 150 C70 140 90 162 118 150 S160 118 190 128 S240 150 262 120 S310 92 336 104 S388 70 414 78 S460 52 480 58'
+    'M48 172 C78 162 98 184 126 172 S168 140 198 150 S248 172 270 142 S318 114 344 126 S396 92 422 100 S468 74 488 80'
   return (
-    <svg viewBox="0 0 520 260" className="il il-chart" aria-hidden>
+    <svg viewBox="0 0 540 250" className="il il-chart" role="img" aria-labelledby="chart-title">
+      <title id="chart-title">
+        Over 30 days the market rate rises from 1.1700 to 1.2140 while the forward stays locked at 1.1700.
+      </title>
       <defs>
-        <linearGradient id="il-saved" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" className="il-saved-a" />
-          <stop offset="1" className="il-saved-b" />
-        </linearGradient>
+        <pattern id="il-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="6" className="il-hatch" />
+        </pattern>
       </defs>
-      {[60, 100, 140, 180, 220].map((y) => (
-        <line key={y} x1="40" x2="490" y1={y} y2={y} className="il-grid" />
+      {[72, 112, 152, 192].map((y) => (
+        <line key={y} x1="48" x2="500" y1={y} y2={y} className="il-grid" />
       ))}
-      <path d={`${spot} L480 150 L40 150 Z`} fill="url(#il-saved)" />
+      <line x1="48" x2="500" y1="212" y2="212" className="il-axis" />
+      <path d={`${spot} L488 172 L48 172 Z`} fill="url(#il-hatch)" />
       <path d={spot} className="il-spot" />
-      <line x1="40" x2="480" y1="150" y2="150" className="il-strike" />
-      <circle cx="40" cy="150" r="6" className="il-strike-dot" />
-      <circle cx="480" cy="58" r="6" className="il-spot-dot" />
-      <circle cx="480" cy="150" r="6" className="il-strike-dot" />
+      <line x1="48" x2="488" y1="172" y2="172" className="il-strike" />
+      <circle cx="488" cy="80" r="4" className="il-spot-dot" />
+      <circle cx="488" cy="172" r="4" className="il-strike-dot" />
 
-      <g transform="translate(330 22)">
-        <rect width="146" height="26" rx="13" className="il-tag il-tag--spot" />
-        <text x="73" y="17.5" textAnchor="middle" className="il-tag__text">Market at day 30: 1.2140</text>
-      </g>
-      <g transform="translate(290 162)">
-        <rect width="186" height="26" rx="13" className="il-tag il-tag--strike" />
-        <text x="93" y="17.5" textAnchor="middle" className="il-tag__text">Your locked rate: 1.1700</text>
-      </g>
-      <text x="40" y="244" className="il-small">Today</text>
-      <text x="480" y="244" textAnchor="end" className="il-small">Day 30</text>
+      <line x1="488" y1="80" x2="488" y2="40" className="il-leader" />
+      <text x="484" y="36" textAnchor="end" className="il-note">
+        Market at day 30 <tspan className="il-note__num">1.2140</tspan>
+      </text>
+      <line x1="300" y1="172" x2="300" y2="236" className="il-leader" />
+      <text x="306" y="240" className="il-note">
+        Your forward <tspan className="il-note__num">1.1700</tspan>
+      </text>
+      <text x="400" y="138" textAnchor="middle" className="il-note il-note--muted">
+        440 USDC saved
+      </text>
+      <text x="48" y="232" className="il-tick">Today</text>
     </svg>
   )
 }
 
-function Vault({ check = false }: { check?: boolean }) {
+/**
+ * Settlement mechanics: two parties, one contract, three moments. The bar shows what the contract
+ * holds over time — USDC from the post, EURC from acceptance — and the arrows show who gets what.
+ */
+export function FlowDiagram() {
+  const X = { post: 250, accept: 480, settle: 800 }
   return (
-    <g>
-      <rect x="78" y="46" width="84" height="70" rx="14" className="il-card il-card--stroke" />
-      <rect x="92" y="60" width="56" height="42" rx="9" className="il-vault-door" />
-      {check ? (
-        <path d="M108 81l8 8 16-16" className="il-check" />
-      ) : (
-        <Lock x={120} y={80} s={0.9} />
-      )}
-    </g>
-  )
-}
+    <svg viewBox="0 0 960 330" className="il il-flow" role="img" aria-labelledby="flow-title">
+      <title id="flow-title">
+        The buyer locks USDC when posting, the seller locks EURC when accepting, and at the value date the buyer
+        claims the EURC and the seller claims the USDC.
+      </title>
+      <defs>
+        {(['usd', 'eur'] as const).map((c) => (
+          <marker key={c} id={`arr-${c}`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0 0L10 5L0 10z" className={`il-arrowhead--${c}`} />
+          </marker>
+        ))}
+      </defs>
 
-export function StepPost() {
-  return (
-    <svg viewBox="0 0 240 140" className="il il-step" aria-hidden>
-      <circle cx="120" cy="80" r="62" className="il-blob" />
-      <Vault />
-      <Coin cx={120} cy={17} r={13} kind="usd" />
-      <path d="M120 34v7m-4-4 4 4 4-4" className="il-arrow" />
-      <g className="il-spark">
-        <path d="M44 40v10M39 45h10" />
-        <path d="M194 30v8M190 34h8" />
-      </g>
+      {/* stations */}
+      {(
+        [
+          [X.post, 'Day 0', 'Offer posted'],
+          [X.accept, 'Any time before the offer closes', 'Accepted'],
+          [X.settle, 'Value date', 'Each side claims'],
+        ] as const
+      ).map(([x, small, big]) => (
+        <g key={x}>
+          <line x1={x} x2={x} y1="52" y2="300" className="il-guide" />
+          <text x={x} y="22" textAnchor="middle" className="il-tick">
+            {small}
+          </text>
+          <text x={x} y="40" textAnchor="middle" className="il-station">
+            {big}
+          </text>
+        </g>
+      ))}
+
+      {/* lanes */}
+      <text x="20" y="92" className="il-lane">Buyer of EURC</text>
+      <line x1="170" x2="930" y1="88" y2="88" className="il-lane-line" />
+      <text x="20" y="272" className="il-lane">Seller of EURC</text>
+      <line x1="170" x2="930" y1="268" y2="268" className="il-lane-line" />
+
+      {/* the contract, and what it holds */}
+      <rect x="170" y="134" width="760" height="88" rx="6" className="il-contract" />
+      <text x="186" y="182" className="il-lane il-lane--muted">Outright</text>
+      <rect x={X.post} y="148" width={X.settle - X.post} height="24" rx="3" className="il-held il-held--usd" />
+      <text x={X.post + 12} y="164.5" className="il-held__text il-held__text--usd">USDC held · 11,700.00</text>
+      <rect x={X.accept} y="180" width={X.settle - X.accept} height="24" rx="3" className="il-held il-held--eur" />
+      <text x={X.accept + 12} y="196.5" className="il-held__text il-held__text--eur">EURC held · 10,000.00</text>
+
+      {/* legs in */}
+      <line x1={X.post} y1="96" x2={X.post} y2="144" className="il-leg il-leg--usd" markerEnd="url(#arr-usd)" />
+      <text x={X.post + 10} y="122" className="il-leg__text">locks USDC</text>
+      <line x1={X.accept} y1="260" x2={X.accept} y2="208" className="il-leg il-leg--eur" markerEnd="url(#arr-eur)" />
+      <text x={X.accept + 10} y="240" className="il-leg__text">locks EURC</text>
+
+      {/* legs out */}
+      <line x1={X.settle + 22} y1="180" x2={X.settle + 22} y2="96" className="il-leg il-leg--eur" markerEnd="url(#arr-eur)" />
+      <text x={X.settle + 32} y="122" className="il-leg__text">claims EURC</text>
+      <line x1={X.settle + 22} y1="176" x2={X.settle + 22} y2="260" className="il-leg il-leg--usd" markerEnd="url(#arr-usd)" />
+      <text x={X.settle + 32} y="240" className="il-leg__text">claims USDC</text>
     </svg>
   )
 }
 
-export function StepAccept() {
-  return (
-    <svg viewBox="0 0 240 140" className="il il-step" aria-hidden>
-      <circle cx="120" cy="80" r="62" className="il-blob" />
-      <Vault />
-      <Coin cx={36} cy={80} r={18} kind="usd" />
-      <Coin cx={204} cy={80} r={18} kind="eur" />
-      <path d="M58 80h14m-5-5 5 5-5 5" className="il-arrow" />
-      <path d="M182 80h-14m5-5-5 5 5 5" className="il-arrow" />
-    </svg>
-  )
-}
-
-export function StepClaim() {
-  return (
-    <svg viewBox="0 0 240 140" className="il il-step" aria-hidden>
-      <circle cx="120" cy="80" r="62" className="il-blob" />
-      <Vault check />
-      <path d="M72 80H58m5-5-5 5 5 5" className="il-arrow" />
-      <path d="M168 80h14m-5-5 5 5-5 5" className="il-arrow" />
-      <Coin cx={36} cy={80} r={18} kind="eur" />
-      <Coin cx={204} cy={80} r={18} kind="usd" />
-    </svg>
-  )
-}
-
-/** Empty blotter: a blank ticket waiting for its first trade. */
+/** Empty blotter: a blank confirmation slip. */
 export function EmptyTicket() {
   return (
-    <svg viewBox="0 0 200 120" className="il il-empty" aria-hidden>
-      <circle cx="100" cy="64" r="52" className="il-blob" />
-      <rect x="50" y="26" width="100" height="72" rx="12" className="il-card il-card--stroke" />
-      <rect x="64" y="42" width="40" height="7" rx="3.5" className="il-line" />
-      <rect x="64" y="58" width="72" height="12" rx="4" className="il-line il-line--soft" />
-      <rect x="64" y="78" width="30" height="7" rx="3.5" className="il-line il-line--soft" />
-      <Coin cx={150} cy={28} r={14} kind="eur" />
-      <Coin cx={52} cy={96} r={12} kind="usd" />
-    </svg>
-  )
-}
-
-/* Small line icons for feature cards */
-export function Icon({ name }: { name: 'chain' | 'gas' | 'final' | 'pull' | 'exact' | 'contract' | 'shield' | 'test' }) {
-  const paths: Record<typeof name, React.ReactNode> = {
-    chain: (
-      <>
-        <circle cx="8" cy="12" r="5" />
-        <circle cx="16" cy="12" r="5" />
-      </>
-    ),
-    gas: (
-      <>
-        <circle cx="12" cy="12" r="8.5" />
-        <path d="M12 7v10M14.8 9.2c-.6-.8-1.6-1.2-2.8-1.2-1.6 0-2.8.8-2.8 2s1.2 1.7 2.8 2 2.8.8 2.8 2-1.2 2-2.8 2c-1.2 0-2.3-.5-2.9-1.3" />
-      </>
-    ),
-    final: (
-      <>
-        <circle cx="12" cy="12" r="8.5" />
-        <path d="M8 12.2l2.7 2.7L16.2 9.4" />
-      </>
-    ),
-    pull: (
-      <>
-        <path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5" />
-        <path d="M5 19h14" />
-      </>
-    ),
-    exact: (
-      <>
-        <path d="M5 9h14M5 15h14" />
-      </>
-    ),
-    contract: (
-      <>
-        <rect x="5" y="3.5" width="14" height="17" rx="2.5" />
-        <path d="M9 9h6M9 13h6M9 17h3" />
-      </>
-    ),
-    shield: (
-      <>
-        <path d="M12 3.5l7 2.8v5.2c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6.3z" />
-        <path d="M9 12l2.2 2.2L15.5 10" />
-      </>
-    ),
-    test: (
-      <>
-        <path d="M9.5 3.5h5M10.5 3.5v6L5.4 18a1.7 1.7 0 0 0 1.5 2.5h10.2a1.7 1.7 0 0 0 1.5-2.5l-5.1-8.5v-6" />
-        <path d="M7.6 14.5h8.8" />
-      </>
-    ),
-  }
-  return (
-    <svg viewBox="0 0 24 24" className="icon" aria-hidden>
-      {paths[name]}
+    <svg viewBox="0 0 160 110" className="il il-empty" aria-hidden>
+      <rect x="30" y="10" width="100" height="84" rx="6" className="il-slip" />
+      <line x1="44" x2="84" y1="28" y2="28" className="il-rule il-rule--strong" />
+      <line x1="44" x2="116" y1="44" y2="44" className="il-rule" />
+      <line x1="44" x2="116" y1="56" y2="56" className="il-rule" />
+      <line x1="44" x2="96" y1="68" y2="68" className="il-rule" />
+      <line x1="30" x2="130" y1="80" y2="80" className="il-perf" />
+      <circle cx="112" cy="30" r="10" className="il-stamp__ring il-stamp__ring--thin" />
     </svg>
   )
 }
