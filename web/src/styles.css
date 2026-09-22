@@ -296,3 +296,20 @@ tbody tr.selected { background: var(--eur-wash); }
 body.no-scroll { overflow: hidden; }
 .desk-loading { min-height: 60vh; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--muted); }
 section[id] { scroll-margin-top: 80px; }
+
+/* Wallet picker */
+.modal { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 16px; }
+.modal__panel { position: relative; width: min(400px, 100%); padding: 22px; display: flex; flex-direction: column; gap: 16px; box-shadow: var(--shadow-lg); animation: pop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes pop { from { transform: translateY(8px) scale(0.98); opacity: 0; } }
+.picker__head { display: flex; align-items: center; justify-content: space-between; }
+.picker__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.picker__wallet { width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); text-align: left; transition: border-color 0.15s ease, background 0.15s ease; }
+.picker__wallet:not(:disabled):hover { border-color: var(--ink); background: var(--bg); }
+.picker__wallet img, .picker__blank { width: 32px; height: 32px; border-radius: 8px; flex: none; }
+.picker__blank { background: var(--eur-wash); }
+.picker__name { font-weight: 600; flex: 1; }
+.picker__state { font-size: 0.8rem; color: var(--amber); font-weight: 600; }
+.picker__none { display: flex; flex-direction: column; gap: 12px; color: var(--muted); }
+.picker__links { display: flex; gap: 8px; flex-wrap: wrap; }
+.picker__note { font-size: 0.8rem; color: var(--faint); }
+.picker__wallet[aria-busy="true"] { opacity: 1; border-color: var(--amber); }

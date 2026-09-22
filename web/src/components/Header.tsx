@@ -1,14 +1,15 @@
 import Link from 'next/link'
-import { useAccount, useChainId, useConnect, useDisconnect, useSwitchChain } from 'wagmi'
+import { useAccount, useChainId, useDisconnect, useSwitchChain } from 'wagmi'
 import { arc } from '../config'
 import { useBalances } from '../hooks/useOutright'
 import { fmtAmount, short } from '../lib/format'
 import { Mark } from './Illustrations'
+import { useWalletPicker } from './WalletPicker'
 
 export function Header() {
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
-  const { connect, connectors, isPending } = useConnect()
+  const openPicker = useWalletPicker()
   const { disconnect } = useDisconnect()
   const { switchChain } = useSwitchChain()
   const bal = useBalances()
@@ -39,12 +40,8 @@ export function Header() {
             </dl>
           )}
           {!isConnected && (
-            <button
-              className="btn btn--ink btn--sm"
-              disabled={isPending || connectors.length === 0}
-              onClick={() => connect({ connector: connectors[0] })}
-            >
-              {connectors.length === 0 ? 'No wallet found' : isPending ? 'Connecting…' : 'Connect wallet'}
+            <button className="btn btn--ink btn--sm" onClick={openPicker}>
+              Connect wallet
             </button>
           )}
           {wrongChain && (

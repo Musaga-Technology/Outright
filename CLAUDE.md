@@ -22,7 +22,7 @@ worth taking further. Favor correctness and a clean live demo over breadth.
   - `src/hooks/useOutright.ts` — reads (tokens, balances, all deals via multicall, polling 4s).
   - `src/hooks/useTxFlow.ts` — approve-if-needed + write + wait-for-receipt, with readable revert messages.
   - `src/lib/deal.ts` — `Deal` type and `phaseOf()`: UI phase derived from on-chain status + clock.
-  - `src/components/` — Header, Ticket (create), Blotter (table), DealDetail (actions, shown in a slide-over drawer), RateFigure, WalletButton (primary button that walks connect → switch chain → action).
+  - `src/components/` — Header, Ticket (create), Blotter (table), DealDetail (actions, shown in a slide-over drawer), RateFigure, WalletButton (primary button that walks connect → switch chain → action), WalletPicker (modal listing EIP-6963 wallets; wagmi `injected()` only, no WalletConnect yet), Overlay (Drawer/Modal with focus handling).
 - `scripts/local.sh` — starts anvil, installs Multicall3 at the canonical address, deploys the demo,
   writes `web/.env.local`.
 

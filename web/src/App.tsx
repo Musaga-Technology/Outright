@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Blotter, type Tab } from './components/Blotter'
 import { DealDetail } from './components/DealDetail'
 import { Header } from './components/Header'
+import { Drawer } from './components/Overlay'
 import { Ticket } from './components/Ticket'
+import { WalletPickerProvider } from './components/WalletPicker'
 import { explorerAddress, OUTRIGHT_ADDRESS } from './config'
 import { useDeals } from './hooks/useOutright'
 
@@ -13,7 +15,7 @@ export default function App() {
   const deal = deals.find((d) => d.id === selected) ?? null
 
   return (
-    <>
+    <WalletPickerProvider>
       <Header />
       <div className="page">
         {!OUTRIGHT_ADDRESS && (
@@ -53,39 +55,10 @@ export default function App() {
       </footer>
 
       {deal && (
-        <Drawer onClose={() => setSelected(null)}>
+        <Drawer onClose={() => setSelected(null)} labelledBy="detail-title">
           <DealDetail key={deal.id.toString()} deal={deal} onChanged={refetch} onClose={() => setSelected(null)} />
         </Drawer>
       )}
-    </>
-  )
-}
-
-/** Slide-over panel: Esc or the backdrop closes it, focus moves in and returns to the row that opened it. */
-function Drawer({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  const panel = useRef<HTMLDivElement>(null)
-  // The parent re-renders on every poll; keep the latest onClose without re-running the effect.
-  const close = useRef(onClose)
-  close.current = onClose
-  useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null
-    panel.current?.querySelector<HTMLElement>('button, a')?.focus()
-    document.body.classList.add('no-scroll')
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close.current()
-    window.addEventListener('keydown', onKey)
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.classList.remove('no-scroll')
-      opener?.focus()
-    }
-  }, [])
-
-  return (
-    <div className="drawer" role="dialog" aria-modal="true" aria-labelledby="detail-title">
-      <div className="drawer__backdrop" onClick={onClose} />
-      <div className="drawer__panel" ref={panel}>
-        {children}
-      </div>
-    </div>
+    </WalletPickerProvider>
   )
 }
