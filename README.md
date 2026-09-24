@@ -50,6 +50,29 @@ cd contracts
 forge script script/Deploy.s.sol --rpc-url arc_mainnet --private-key $PRIVATE_KEY --broadcast
 # then in web/.env.local:  NEXT_PUBLIC_OUTRIGHT_ADDRESS=<deployed address>
 ```
+### Seed the live demo
+Two wallets are needed, because a maker can't take its own offer. Both can be yours. Nothing here is
+spent: unsold offers are refundable and a settled trade exchanges the two legs at the agreed rate.
+About €5 and $6 of working capital, plus gas, covers all of it.
+
+```bash
+cd contracts
+export OUTRIGHT=<deployed address> PK_A=<maker key> PK_B=<taker key>
+export RATE=1170000          # optional: USDC per EURC, 6 decimals. Default 1.1700
+
+forge script script/SeedMainnet.s.sol --sig "settle()" --rpc-url arc_mainnet --broadcast
+# two €1 forwards, one each way, maturing in five minutes. Wait ~6 minutes, then:
+forge script script/SeedMainnet.s.sol --sig "claim()"  --rpc-url arc_mainnet --broadcast
+forge script script/SeedMainnet.s.sol --sig "book()"   --rpc-url arc_mainnet --broadcast
+# four standing offers, both sides, 7-day accept window
+
+forge script script/SeedMainnet.s.sol --sig "cancelOpen()" --rpc-url arc_mainnet --broadcast
+# later: take the standing offers back and refund the deposits
+```
+
+The offers and settled trades on the live desk were posted by us to demonstrate the venue. There is
+no third-party flow yet, and none of it is claimed as organic liquidity.
+
 Defaults: USDC ERC-20 interface `0x3600000000000000000000000000000000000000`,
 EURC `0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1`. For testnet, set
 `EURC_ADDRESS=0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a` and the frontend's `NEXT_PUBLIC_ARC_*` overrides.

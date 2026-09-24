@@ -8,11 +8,15 @@ import { Side, type Deal } from './deal'
  */
 export const takerBuysEURC = (d: Deal) => d.makerSide === Side.SellEURC
 
+// A touch of slack on each edge, so an offer posted "in 7 days" seconds ago still reads as a
+// one-week tenor rather than falling into the next band.
+const SLACK = 1.01
+
 const BUCKETS = [
-  { key: 'day', label: 'Within a day', max: 86400 },
-  { key: 'week', label: 'Within a week', max: 7 * 86400 },
-  { key: 'month', label: 'Within a month', max: 30 * 86400 },
-  { key: 'quarter', label: 'Within three months', max: 90 * 86400 },
+  { key: 'day', label: 'Up to a day', max: 86400 * SLACK },
+  { key: 'week', label: 'Up to a week', max: 7 * 86400 * SLACK },
+  { key: 'month', label: 'Up to a month', max: 30 * 86400 * SLACK },
+  { key: 'quarter', label: 'Up to three months', max: 90 * 86400 * SLACK },
   { key: 'long', label: 'Longer dated', max: Infinity },
 ] as const
 

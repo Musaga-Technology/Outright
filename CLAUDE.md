@@ -15,6 +15,9 @@ worth taking further. Favor correctness and a clean live demo over breadth.
     Multicall3Lite (local-only).
   - `script/Deploy.s.sol` — mainnet deploy (asserts both tokens report 6 decimals).
   - `script/LocalDemo.s.sol` — anvil-only: mock tokens + seeded forwards in several states.
+  - `script/SeedMainnet.s.sol` — live demo seeding, one step per `--sig`: `settle()` (two €1 forwards
+    accepted, 5-min maturity), `claim()`, `book()` (4 standing offers, ±25/50 pips), `cancelOpen()`
+    (refunds). Needs `OUTRIGHT`, `PK_A`, `PK_B`; everything is refundable, only gas is spent.
   - `lib/` is vendored (forge-std, OpenZeppelin v5.1.0 `contracts/` only). No `forge install` needed.
 - `web/` — Next.js (App Router) + React 19 + TypeScript + wagmi v2 + viem. `/` is the landing page (server-rendered, `src/app/page.tsx` + `landing.css`); `/desk` is the app, client-only (`src/app/desk/desk-client.tsx` loads `src/App.tsx` with `ssr: false`). Illustrations are inline SVGs in `src/components/Illustrations.tsx`, coloured by CSS tokens. No UI framework; plain CSS in `src/styles.css`.
   - `src/config.ts` — chain definition (env-overridable), contract address, wagmi config.
@@ -68,8 +71,8 @@ Status: 0 None, 1 Open, 2 Active, 3 Cancelled, 4 Unwound.
 - Keep it responsive (single column under 900px), keyboard-accessible, and respect reduced motion.
 
 ## Next tasks (in priority order)
-1. Deploy to Arc mainnet; seed 2–3 tiny live forwards (e.g. €1, 5-minute maturity) so reviewers see
-   real settled trades on the explorer.
+1. Deploy to Arc mainnet, then seed with `script/SeedMainnet.s.sol` (tested end-to-end on anvil) so
+   reviewers see real settled trades on the explorer. Getting real EURC onto Arc is the open question.
 2. Deploy the frontend (Vercel/Netlify) with `NEXT_PUBLIC_OUTRIGHT_ADDRESS` set; verify on mainnet with a
    real wallet.
 3. Mark-to-market panel: show a reference USDC/EURC rate and each running forward's P&L vs strike.
