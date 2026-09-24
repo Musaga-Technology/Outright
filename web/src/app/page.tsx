@@ -30,6 +30,7 @@ const safety = [
   ['Each party claims its own leg', 'Payouts are pulled, not pushed. If one address is ever blocked by the token issuer, the other side still claims.'],
   ['Amounts, not a rate', 'An offer records exactly how much of each currency moves. Settlement never rounds.'],
   ['Tested for conservation', 'Fuzz tests check that every token deposited leaves the contract, to the right party, in every path through a trade.'],
+  ['One pair per contract', 'The two currencies are fixed when the contract is deployed. Another pair means another deployment, never shared collateral and never a token list to get wrong.'],
 ]
 
 export default function Landing() {

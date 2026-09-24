@@ -61,6 +61,9 @@ EURC `0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1`. For testnet, set
   blocked counterparty can't freeze the other side's funds (tested).
 - **Exact legs:** offers store the EURC and USDC amounts, not a rate, so settlement never rounds.
 - **The frontend reads token addresses from the contract**, so it can't be pointed at the wrong EURC.
+- **One pair per deployment:** the two tokens are immutable constructor arguments. Supporting another
+  pair means deploying a second instance, so collateral is never shared between pairs and there is no
+  token whitelist to maintain.
 
 ## Roadmap
 - Margined non-deliverable forwards, cash-settled off a USDC/EURC TWAP
