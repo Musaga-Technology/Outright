@@ -1,4 +1,5 @@
 import { useAccount } from 'wagmi'
+import { groupOffers, takerBuysEURC, type BookGroup } from '../lib/book'
 import { phaseLabel, phaseOf, roleOf, same, Side, type Deal } from '../lib/deal'
 import { fmtAmount, fmtCountdown, fmtDate, rateOf } from '../lib/format'
 import { useNow } from '../hooks/useNow'
@@ -37,10 +38,59 @@ export function Blotter({
     all: deals.length,
   }
 
+  // The open-offer tab is the market: grouped by tenor, best price first on each side.
+  const groups = tab === 'offers' ? groupOffers(rows, now) : null
+
+  const row = (d: Deal, group?: BookGroup) => {
+    const phase = phaseOf(d, now)
+    const role = roleOf(d, address)
+    const left = Number(d.maturity) - now
+    const mine = same(d.maker, address)
+    const best = group && (group.bestBuy?.id === d.id || group.bestSell?.id === d.id)
+    return (
+      <tr
+        key={d.id.toString()}
+        className={selected === d.id ? 'selected' : ''}
+        onClick={() => onSelect(d.id)}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect(d.id)}
+        tabIndex={0}
+        aria-selected={selected === d.id}
+      >
+        <td>
+          #{d.id.toString()}
+          {role && <span className={`role role--${role}`}>you</span>}
+        </td>
+        <td>
+          {groups
+            ? mine
+              ? 'Your offer'
+              : takerBuysEURC(d)
+                ? 'Buy EURC'
+                : 'Sell EURC'
+            : d.makerSide === Side.BuyEURC
+              ? 'Buys EURC'
+              : 'Sells EURC'}
+        </td>
+        <td className="num eur">{fmtAmount(d.eurcAmount)}</td>
+        <td className="num">
+          <span className="rate-cell">
+            <RateFigure rate={rateOf(d.usdcAmount, d.eurcAmount)} size="sm" />
+            {best && <span className="best">best</span>}
+          </span>
+        </td>
+        <td className="num usd">{fmtAmount(d.usdcAmount)}</td>
+        <td title={fmtDate(d.maturity)}>{left > 0 ? `in ${fmtCountdown(left)}` : fmtDate(d.maturity)}</td>
+        <td>
+          <span className={`phase phase--${phase}`}>{phaseLabel[phase]}</span>
+        </td>
+      </tr>
+    )
+  }
+
   return (
     <section className="blotter card" aria-labelledby="blotter-title">
       <div className="blotter__head">
-        <h2 id="blotter-title">Forwards</h2>
+        <h2 id="blotter-title">{tab === 'offers' ? 'Market' : 'Forwards'}</h2>
         <div className="tabs" role="tablist">
           {(
             [
@@ -79,7 +129,7 @@ export function Blotter({
             <thead>
               <tr>
                 <th scope="col">Deal</th>
-                <th scope="col">Maker</th>
+                <th scope="col">{groups ? 'You can' : 'Maker'}</th>
                 <th scope="col" className="num">EURC</th>
                 <th scope="col" className="num">Rate</th>
                 <th scope="col" className="num">USDC</th>
@@ -87,41 +137,38 @@ export function Blotter({
                 <th scope="col">Status</th>
               </tr>
             </thead>
-            <tbody>
-              {rows.map((d) => {
-                const phase = phaseOf(d, now)
-                const role = roleOf(d, address)
-                const left = Number(d.maturity) - now
-                return (
-                  <tr
-                    key={d.id.toString()}
-                    className={selected === d.id ? 'selected' : ''}
-                    onClick={() => onSelect(d.id)}
-                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect(d.id)}
-                    tabIndex={0}
-                    aria-selected={selected === d.id}
-                  >
-                    <td>
-                      #{d.id.toString()}
-                      {role && <span className={`role role--${role}`}>you</span>}
-                    </td>
-                    <td>{d.makerSide === Side.BuyEURC ? 'Buys EURC' : 'Sells EURC'}</td>
-                    <td className="num eur">{fmtAmount(d.eurcAmount)}</td>
-                    <td className="num">
-                      <RateFigure rate={rateOf(d.usdcAmount, d.eurcAmount)} size="sm" />
-                    </td>
-                    <td className="num usd">{fmtAmount(d.usdcAmount)}</td>
-                    <td title={fmtDate(d.maturity)}>{left > 0 ? `in ${fmtCountdown(left)}` : fmtDate(d.maturity)}</td>
-                    <td>
-                      <span className={`phase phase--${phase}`}>{phaseLabel[phase]}</span>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
+            {groups
+              ? groups.map((g) => (
+                  <tbody key={g.key}>
+                    <tr className="group">
+                      <th colSpan={7} scope="colgroup">
+                        <span className="group__inner">
+                          <span className="group__label">
+                            {g.label} <span className="count">{g.offers.length}</span>
+                          </span>
+                          <span className="group__quotes">
+                            <Quote label="Buy EURC from" deal={g.bestBuy} />
+                            <Quote label="Sell EURC at" deal={g.bestSell} />
+                          </span>
+                        </span>
+                      </th>
+                    </tr>
+                    {g.offers.map((d) => row(d, g))}
+                  </tbody>
+                ))
+              : <tbody>{rows.map((d) => row(d))}</tbody>}
           </table>
         </div>
       )}
     </section>
+  )
+}
+
+function Quote({ label, deal }: { label: string; deal: Deal | null }) {
+  return (
+    <span className="quote">
+      <span className="quote__label">{label}</span>
+      {deal ? <RateFigure rate={rateOf(deal.usdcAmount, deal.eurcAmount)} size="sm" /> : <span className="quote__none">—</span>}
+    </span>
   )
 }

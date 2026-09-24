@@ -330,3 +330,15 @@ body.no-scroll { overflow: hidden; }
 .banner--action .hint--warn { color: var(--amber); }
 /* The wrong-network message lives in the desk banner; the top bar keeps just the button. */
 .topbar .switcher .hint--warn { display: none; }
+
+/* Market groups: tenor band with the best price on each side */
+tr.group th { padding: 12px 22px; background: var(--bg); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.group__inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.group__label { font-size: 0.86rem; font-weight: 600; color: var(--ink); }
+.group__quotes { display: flex; gap: 22px; }
+.quote { display: inline-flex; align-items: baseline; gap: 7px; }
+.quote__label { font-size: 0.76rem; color: var(--faint); font-weight: 400; }
+.quote__none { color: var(--line-strong); font-weight: 600; }
+.rate-cell { display: inline-flex; align-items: baseline; gap: 7px; justify-content: flex-end; }
+.best { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--usd); background: var(--usd-wash); padding: 2px 5px; border-radius: 3px; }
+@media (max-width: 600px) { tr.group th { padding-left: 16px; padding-right: 16px; } .group__quotes { gap: 14px; } }
