@@ -45,7 +45,7 @@ cd web && npm run build                    # next build (type-checks); must pass
   balances for USDC (native is 18 decimals on Arc).
 - Payouts are **pull-based** (`claim`), one leg per party, so a blocklisted party can't lock the other.
 - Offers store `eurcAmount` and `usdcAmount` explicitly; the rate is derived for display only.
-- Mainnet EURC is `0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1`. `0x89B5…D72a` is TESTNET EURC — a common
+- Mainnet EURC is `0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1` (verified live on chain 5042). `0x89B5…D72a` is TESTNET EURC — a common
   mistake in other Arc repos.
 - The frontend reads USDC/EURC addresses from the contract (`usdc()`, `eurc()`), not from config.
 - Every contract change needs tests, and the fuzz conservation test must keep passing.
@@ -76,8 +76,9 @@ Status: 0 None, 1 Open, 2 Active, 3 Cancelled, 4 Unwound.
 2. Deploy the frontend (Vercel/Netlify) with `NEXT_PUBLIC_OUTRIGHT_ADDRESS` set; verify on mainnet with a
    real wallet.
 3. Mark-to-market panel: show a reference USDC/EURC rate and each running forward's P&L vs strike.
-   Candidate source: the Uniswap V3 USDC/EURC pool on Arc (TWAP via `observe()`); display only,
-   never used for settlement in the collateralized version.
+   Source: Uniswap V3 USDC/EURC 0.05% pool `0x6fd5f2fb831940dcd61a98c5b3acb7d8c6f3bfc1` (verified on
+   mainnet: token0 = USDC, token1 = EURC, `observe()` works, ~$4.8k/€25k in the pool as of 24 Sep 2026).
+   USDC per EURC = 1 / (sqrtPriceX96/2**96)**2. Display only, never used for settlement.
 4. Replace full-scan reads with event indexing (`Created`/`Accepted`/`Claimed` logs) for scale.
 5. Stretch: margined non-deliverable forward contract, cash-settled off a TWAP, with its own tests.
 6. Submission assets: README screenshots, 2-minute demo video, explorer links to live settlements.
