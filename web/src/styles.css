@@ -324,3 +324,9 @@ body.no-scroll { overflow: hidden; }
 .il-rule--strong { stroke: var(--line-strong); }
 .il-perf { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 3 3; }
 .il-empty .il-stamp__ring { stroke: var(--usd); stroke-opacity: 0.5; }
+.switcher { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.hint--warn { color: var(--amber); max-width: 28rem; }
+.banner--action { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.banner--action .hint--warn { color: var(--amber); }
+/* The wrong-network message lives in the desk banner; the top bar keeps just the button. */
+.topbar .switcher .hint--warn { display: none; }

@@ -1,8 +1,9 @@
-import { useAccount, useChainId } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { outrightAbi } from '../abi/outright'
-import { arc, explorerAddress, OUTRIGHT_ADDRESS } from '../config'
+import { explorerAddress, OUTRIGHT_ADDRESS } from '../config'
 import { useNow } from '../hooks/useNow'
 import { useTokens } from '../hooks/useOutright'
+import { useWalletChain } from '../hooks/useWalletChain'
 import { useTxFlow } from '../hooks/useTxFlow'
 import { buyerOf, phaseLabel, phaseOf, roleOf, same, sellerOf, Side, ZERO, type Deal } from '../lib/deal'
 import { fmtAmount, fmtCountdown, fmtDate, rateOf, short } from '../lib/format'
@@ -11,8 +12,8 @@ import { RateFigure } from './RateFigure'
 import { WalletButton } from './WalletButton'
 
 export function DealDetail({ deal, onChanged, onClose }: { deal: Deal; onChanged: () => void; onClose: () => void }) {
-  const { address, isConnected } = useAccount()
-  const chainId = useChainId()
+  const { address } = useAccount()
+  const { isConnected, wrongChain } = useWalletChain()
   const now = useNow()
   const { usdc, eurc } = useTokens()
   const flow = useTxFlow()
@@ -23,7 +24,6 @@ export function DealDetail({ deal, onChanged, onClose }: { deal: Deal; onChanged
   const isTaker = same(deal.taker, address)
   const restricted = deal.status === 1 && deal.taker !== ZERO
   const canAccept = phase === 'open' && isConnected && !isMaker && (!restricted || isTaker)
-  const wrongChain = isConnected && chainId !== arc.id
   const busy = flow.state.kind === 'working'
 
   const buyer = buyerOf(deal)

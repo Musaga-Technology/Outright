@@ -1,19 +1,19 @@
 import Link from 'next/link'
-import { useAccount, useChainId, useDisconnect, useSwitchChain } from 'wagmi'
+import { useAccount, useDisconnect } from 'wagmi'
 import { arc } from '../config'
+import { useWalletChain } from '../hooks/useWalletChain'
 import { useBalances } from '../hooks/useOutright'
 import { fmtAmount, short } from '../lib/format'
 import { Mark } from './Illustrations'
+import { SwitchChainButton } from './WalletButton'
 import { useWalletPicker } from './WalletPicker'
 
 export function Header() {
   const { address, isConnected } = useAccount()
-  const chainId = useChainId()
   const openPicker = useWalletPicker()
   const { disconnect } = useDisconnect()
-  const { switchChain } = useSwitchChain()
   const bal = useBalances()
-  const wrongChain = isConnected && chainId !== arc.id
+  const { wrongChain } = useWalletChain()
 
   return (
     <header className="topbar">
@@ -44,11 +44,7 @@ export function Header() {
               Connect wallet
             </button>
           )}
-          {wrongChain && (
-            <button className="btn btn--amber btn--sm" onClick={() => switchChain({ chainId: arc.id })}>
-              Switch to Arc
-            </button>
-          )}
+          {wrongChain && <SwitchChainButton size="sm" />}
           {isConnected && (
             <button className="wallet-chip" onClick={() => disconnect()} title="Disconnect">
               {short(address!)}

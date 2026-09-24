@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { isAddress, type Address } from 'viem'
-import { useAccount, useChainId } from 'wagmi'
 import { outrightAbi } from '../abi/outright'
-import { arc, OUTRIGHT_ADDRESS } from '../config'
+import { OUTRIGHT_ADDRESS } from '../config'
 import { useTokens } from '../hooks/useOutright'
+import { useWalletChain } from '../hooks/useWalletChain'
 import { useTxFlow } from '../hooks/useTxFlow'
 import { Side, ZERO } from '../lib/deal'
 import { fmtAmount, fmtDate, rateOf, toUnits, usdcFor } from '../lib/format'
@@ -25,8 +25,7 @@ const WINDOWS = [
 ]
 
 export function Ticket({ onPosted }: { onPosted: () => void }) {
-  const { isConnected } = useAccount()
-  const chainId = useChainId()
+  const { onArc } = useWalletChain()
   const { usdc, eurc } = useTokens()
   const flow = useTxFlow()
 
@@ -58,7 +57,7 @@ export function Ticket({ onPosted }: { onPosted: () => void }) {
   const buying = side === Side.BuyEURC
 
   async function post() {
-    if (problem || !isConnected || chainId !== arc.id || !usdc || !eurc || !eurUnits || !usdUnits) return
+    if (problem || !onArc || !usdc || !eurc || !eurUnits || !usdUnits) return
     const nowAtSend = Math.floor(Date.now() / 1000)
     const m = BigInt(nowAtSend + tenor)
     const a = BigInt(Math.min(nowAtSend + acceptWindow, nowAtSend + tenor))
@@ -166,7 +165,7 @@ export function Ticket({ onPosted }: { onPosted: () => void }) {
       </div>
 
       <WalletButton label="Post offer" disabled={!!problem || flow.state.kind === 'working'} onClick={post} />
-      {problem && isConnected && chainId === arc.id && flow.state.kind === 'idle' && <p className="hint">{problem}</p>}
+      {problem && onArc && flow.state.kind === 'idle' && <p className="hint">{problem}</p>}
       <FlowStatus state={flow.state} onDismiss={flow.reset} />
     </section>
   )

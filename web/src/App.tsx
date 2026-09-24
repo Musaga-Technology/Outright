@@ -4,14 +4,17 @@ import { DealDetail } from './components/DealDetail'
 import { Header } from './components/Header'
 import { Drawer } from './components/Overlay'
 import { Ticket } from './components/Ticket'
+import { SwitchChainButton } from './components/WalletButton'
 import { WalletPickerProvider } from './components/WalletPicker'
-import { explorerAddress, OUTRIGHT_ADDRESS } from './config'
+import { arc, explorerAddress, OUTRIGHT_ADDRESS } from './config'
 import { useDeals } from './hooks/useOutright'
+import { useWalletChain } from './hooks/useWalletChain'
 
 export default function App() {
   const { deals, isLoading, refetch } = useDeals()
   const [selected, setSelected] = useState<bigint | null>(null)
   const [tab, setTab] = useState<Tab>('offers')
+  const { wrongChain } = useWalletChain()
   const deal = deals.find((d) => d.id === selected) ?? null
 
   return (
@@ -23,6 +26,14 @@ export default function App() {
             No contract configured. Copy <code>.env.example</code> to <code>.env.local</code> and set{' '}
             <code>NEXT_PUBLIC_OUTRIGHT_ADDRESS</code>.
           </p>
+        )}
+        {wrongChain && (
+          <div className="banner banner--action">
+            <p>
+              Your wallet is on another network. Outright runs on {arc.name}, where USDC and EURC both live.
+            </p>
+            <SwitchChainButton size="sm" />
+          </div>
         )}
         <div className="page__intro">
           <div>

@@ -162,7 +162,8 @@ export default function Landing() {
             <figure className="figure">
               <HedgeChart />
               <figcaption>
-                <span>Fig. 1</span> EUR/USD over the life of the forward, against the rate locked on day one.
+                <span>Fig. 1</span> Illustrative: EUR/USD over the life of the forward, against the rate locked on
+                day one. Figures on this page are an example, not a live quote.
               </figcaption>
             </figure>
           </div>
