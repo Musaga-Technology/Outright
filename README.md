@@ -9,6 +9,24 @@ days each side claims what they bought at the rate agreed today — wherever EUR
 In FX, an *outright forward* is exactly this: one agreement to exchange two currencies at a fixed rate
 on a future date.
 
+## Live on Arc mainnet
+
+| | |
+|---|---|
+| Contract | [`0xa779261fAb077540e49E895027B9A75a9752B5E4`](https://explorer.arc.io/address/0xa779261fAb077540e49E895027B9A75a9752B5E4) |
+| Chain | Arc mainnet (5042) |
+| Settled forward #1 | buyer [claimed EURC](https://explorer.arc.io/tx/0xdf0b55bac05527c52028d2f8feb5a72a3646a3a9d1d7e6844c90cd730d21520b) · seller [claimed USDC](https://explorer.arc.io/tx/0x3aa7a504f176d5040e625fd0f0682e788febce73b7270033a51b9e438cf0c6d2) |
+| Settled forward #2 | buyer [claimed EURC](https://explorer.arc.io/tx/0xd8a4b448764dc6532200fedc209ac8fcaba275d626269ec23b369ce22c1a72a8) · seller [claimed USDC](https://explorer.arc.io/tx/0x2e366e5ceadd4c702ba5acbaa23f9fef58a5d8bf5c976b89509527c13d3e5581) |
+| Open offers | #3–#6, both sides, 1.1170/1.1220 at a week and 1.1145/1.1245 at a month |
+
+Forwards #1 and #2 are complete, physically settled FX trades: each side locked its currency, waited
+for the value date, and pulled the other's. The offers still on the book hold $0.84 and €0.75 of live
+collateral in the contract.
+
+The trades are deliberately tiny (€0.25) and were posted by us to demonstrate the venue — there is no
+third-party flow yet, and none of this is claimed as organic liquidity. Deploying and settling all of
+it cost about **$0.08 in gas**, paid in USDC.
+
 ## Why Arc
 - USDC and EURC are both native Circle stablecoins on one chain, so a forward is a single-chain,
   two-token escrow. No bridges, no wrapped assets.
@@ -84,6 +102,9 @@ EURC `0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1`. For testnet, set
   blocked counterparty can't freeze the other side's funds (tested).
 - **Exact legs:** offers store the EURC and USDC amounts, not a rate, so settlement never rounds.
 - **The frontend reads token addresses from the contract**, so it can't be pointed at the wrong EURC.
+- **Arc's USDC is a system contract.** `0x3600…0000` is implemented by the node, so Foundry cannot
+  execute it in local simulation and any `forge script` that moves USDC fails with `OpcodeNotFound`
+  before broadcasting. `scripts/seed_live.sh` talks to the node directly instead.
 - **One pair per deployment:** the two tokens are immutable constructor arguments. Supporting another
   pair means deploying a second instance, so collateral is never shared between pairs and there is no
   token whitelist to maintain.
