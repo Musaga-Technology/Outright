@@ -28,6 +28,13 @@ The trades are deliberately tiny (€0.25) and were posted by us to demonstrate 
 third-party flow yet, and none of this is claimed as organic liquidity. Deploying and settling all of
 it cost about **$0.08 in gas**, paid in USDC.
 
+### A note on the wallet warning
+MetaMask currently shows a Blockaid warning on the hosted deployment. It is a known false positive for
+newly created `*.vercel.app` subdomains that request a wallet connection, not a property of this app:
+the contract is public and verified on Arc, approvals are for exact amounts rather than unlimited
+allowances, and nothing ever asks for a seed phrase. A removal request is the documented remedy, and a
+custom domain clears it.
+
 ## Why Arc
 - USDC and EURC are both native Circle stablecoins on one chain, so a forward is a single-chain,
   two-token escrow. No bridges, no wrapped assets.
