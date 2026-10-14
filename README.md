@@ -15,6 +15,7 @@ on a future date.
 |---|---|
 | Contract | [`0xa779261fAb077540e49E895027B9A75a9752B5E4`](https://explorer.arc.io/address/0xa779261fAb077540e49E895027B9A75a9752B5E4) |
 | Chain | Arc mainnet (5042) |
+| Desk | [outright-mu.vercel.app](https://outright-mu.vercel.app) |
 | Settled forward #1 | buyer [claimed EURC](https://explorer.arc.io/tx/0xdf0b55bac05527c52028d2f8feb5a72a3646a3a9d1d7e6844c90cd730d21520b) · seller [claimed USDC](https://explorer.arc.io/tx/0x3aa7a504f176d5040e625fd0f0682e788febce73b7270033a51b9e438cf0c6d2) |
 | Settled forward #2 | buyer [claimed EURC](https://explorer.arc.io/tx/0xd8a4b448764dc6532200fedc209ac8fcaba275d626269ec23b369ce22c1a72a8) · seller [claimed USDC](https://explorer.arc.io/tx/0x2e366e5ceadd4c702ba5acbaa23f9fef58a5d8bf5c976b89509527c13d3e5581) |
 | Open offers | #3–#6, both sides, 1.1170/1.1220 at a week and 1.1145/1.1245 at a month |
