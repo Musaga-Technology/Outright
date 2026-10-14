@@ -26,9 +26,8 @@ import {Outright} from "../src/Outright.sol";
  *           forge script script/SeedMainnet.s.sol --sig "cancelOpen()" --rpc-url arc_mainnet --broadcast
  */
 contract SeedMainnet is Script {
-    uint128 constant EUR = 1e6; // €1.00, six decimals
-
     Outright fwd;
+    uint128 size; // the base trade size in EURC, six decimals
     uint256 rate; // USDC per 1 EURC, 6 decimals
     uint256 pkA;
     uint256 pkB;
@@ -38,6 +37,8 @@ contract SeedMainnet is Script {
         rate = vm.envOr("RATE", uint256(1_170_000));
         pkA = vm.envUint("PK_A");
         pkB = vm.envUint("PK_B");
+        // Trades are deliberately tiny: big enough to be real, small enough to risk nothing.
+        size = uint128(vm.envOr("SIZE", uint256(250_000))); // €0.25
     }
 
     /// @dev usdc = eurc × rate, both 6 decimals.
@@ -53,13 +54,13 @@ contract SeedMainnet is Script {
         uint64 t = uint64(block.timestamp);
         require(a != b, "PK_A and PK_B must be different wallets");
 
-        _requireFunds(a, EUR, usdcFor(EUR));
-        _requireFunds(b, EUR, usdcFor(EUR));
+        _requireFunds(a, size, usdcFor(size));
+        _requireFunds(b, size, usdcFor(size));
 
         vm.startBroadcast(pkA);
         _approve(a);
-        uint256 id1 = fwd.create(Outright.Side.BuyEURC, EUR, usdcFor(EUR), t + 120, t + 300, b);
-        uint256 id2 = fwd.create(Outright.Side.SellEURC, EUR, usdcFor(EUR), t + 120, t + 300, b);
+        uint256 id1 = fwd.create(Outright.Side.BuyEURC, size, usdcFor(size), t + 120, t + 300, b);
+        uint256 id2 = fwd.create(Outright.Side.SellEURC, size, usdcFor(size), t + 120, t + 300, b);
         vm.stopBroadcast();
 
         vm.startBroadcast(pkB);
@@ -71,6 +72,23 @@ contract SeedMainnet is Script {
         console.log("Accepted forwards", id1, id2);
         console.log("Both mature at unix", t + 300);
         console.log("Wait until then, then run --sig claim()");
+    }
+
+    /// Sends the taker wallet its share: enough for one leg each way, plus gas.
+    /// On Arc the ERC-20 USDC balance is the gas balance, so one transfer covers both.
+    function fund() external {
+        address b = vm.addr(pkB);
+        uint256 usdcOut = vm.envOr("FUND_USDC", uint256(600_000)); // $0.60
+        uint256 eurcOut = vm.envOr("FUND_EURC", uint256(350_000)); // €0.35
+
+        vm.startBroadcast(pkA);
+        fwd.usdc().transfer(b, usdcOut);
+        fwd.eurc().transfer(b, eurcOut);
+        vm.stopBroadcast();
+
+        console.log("Funded taker wallet", b);
+        console.log("USDC sent (6dp)", usdcOut);
+        console.log("EURC sent (6dp)", eurcOut);
     }
 
     /// Claims every matured leg either wallet is owed. Safe to re-run; legs that aren't ready are skipped.
@@ -87,16 +105,16 @@ contract SeedMainnet is Script {
         uint64 t = uint64(block.timestamp);
         uint64 week = t + 7 days;
 
-        _requireFunds(a, 3 * EUR, usdcFor(3 * EUR));
+        _requireFunds(a, 3 * size, usdcFor(3 * size));
 
         vm.startBroadcast(pkA);
         _approve(a);
         // A dealer's spread: bid a few pips below the reference, offer a few pips above,
         // wider for the longer tenor.
-        fwd.create(Outright.Side.BuyEURC, 2 * EUR, _at(2 * EUR, -25), week, t + 7 days, address(0));
-        fwd.create(Outright.Side.BuyEURC, EUR, _at(EUR, -50), week, t + 30 days, address(0));
-        fwd.create(Outright.Side.SellEURC, 2 * EUR, _at(2 * EUR, 25), week, t + 7 days, address(0));
-        fwd.create(Outright.Side.SellEURC, EUR, _at(EUR, 50), week, t + 30 days, address(0));
+        fwd.create(Outright.Side.BuyEURC, 2 * size, _at(2 * size, -25), week, t + 7 days, address(0));
+        fwd.create(Outright.Side.BuyEURC, size, _at(size, -50), week, t + 30 days, address(0));
+        fwd.create(Outright.Side.SellEURC, 2 * size, _at(2 * size, 25), week, t + 7 days, address(0));
+        fwd.create(Outright.Side.SellEURC, size, _at(size, 50), week, t + 30 days, address(0));
         vm.stopBroadcast();
 
         console.log("Posted 4 standing offers from", a);
