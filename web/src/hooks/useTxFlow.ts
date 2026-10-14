@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { erc20Abi, maxUint256, type Address, type Hash } from 'viem'
+import { erc20Abi, type Address, type Hash } from 'viem'
 import { useAccount, usePublicClient, useWriteContract } from 'wagmi'
 import { OUTRIGHT_ADDRESS } from '../config'
 
@@ -36,7 +36,9 @@ export function useTxFlow() {
       address: token,
       abi: erc20Abi,
       functionName: 'approve',
-      args: [OUTRIGHT_ADDRESS, maxUint256],
+      // Exactly what this trade needs, never an unlimited allowance: a stray approval can't be
+      // drained later, and wallet scanners treat max-uint approvals as a red flag.
+      args: [OUTRIGHT_ADDRESS, amount],
     })
     setState({ kind: 'working', step: `Waiting for ${symbol} approval`, n: 1, total: 2 })
     await client.waitForTransactionReceipt({ hash })

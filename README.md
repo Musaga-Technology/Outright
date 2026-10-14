@@ -99,6 +99,8 @@ EURC `0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1`. For testnet, set
 ## Design notes
 - **Decimals:** Arc's native USDC gas token has 18 decimals; its ERC-20 interface has 6. Outright
   uses only the ERC-20 interfaces and never reads `msg.value`, so the two are never mixed.
+- **Exact approvals:** the desk approves precisely the amount a trade needs, never an unlimited
+  allowance, so a stale approval can't be drained later.
 - **Pull payouts:** Circle tokens can blocklist addresses. Each side claims independently, so a
   blocked counterparty can't freeze the other side's funds (tested).
 - **Exact legs:** offers store the EURC and USDC amounts, not a rate, so settlement never rounds.
